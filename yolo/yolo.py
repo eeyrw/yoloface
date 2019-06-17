@@ -90,7 +90,8 @@ class YOLO(object):
                                            len(self.class_names),
                                            self.input_image_shape,
                                            score_threshold=self.args.score,
-                                           iou_threshold=self.args.iou)
+                                           iou_threshold=self.args.iou,
+                                           max_boxes=200)
         return boxes, scores, classes
 
     def detect_image(self, image):

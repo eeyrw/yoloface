@@ -46,14 +46,39 @@ def get_args():
                         help='the iou threshold')
     parser.add_argument('--img-size', type=list, action='store',
                         default=(416, 416), help='input image size')
-    parser.add_argument('--image', default=False, action="store_true",
-                        help='image detection mode')
-    parser.add_argument('--video', type=str, default='samples/subway.mp4',
-                        help='path to the video')
     parser.add_argument('--output', type=str, default='outputs/',
                         help='image/video output path')
     args = parser.parse_args()
     return args
+
+
+def compute_iou(rec1, rec2):
+    """
+    computing IoU
+    :param rec1: (y0, x0, y1, x1), which reflects
+            (top, left, bottom, right)
+    :param rec2: (y0, x0, y1, x1)
+    :return: scala value of IoU
+    """
+    # computing area of each rectangles
+    S_rec1 = (rec1[2] - rec1[0]) * (rec1[3] - rec1[1])
+    S_rec2 = (rec2[2] - rec2[0]) * (rec2[3] - rec2[1])
+ 
+    # computing the sum_area
+    sum_area = S_rec1 + S_rec2
+ 
+    # find the each edge of intersect rectangle
+    left_line = max(rec1[1], rec2[1])
+    right_line = min(rec1[3], rec2[3])
+    top_line = max(rec1[0], rec2[0])
+    bottom_line = min(rec1[2], rec2[2])
+ 
+    # judge if there is an intersect
+    if left_line >= right_line or top_line >= bottom_line:
+        return 0
+    else:
+        intersect = (right_line - left_line) * (bottom_line - top_line)
+        return intersect / (sum_area - intersect)
 
 
 if __name__ == "__main__":
@@ -70,8 +95,19 @@ if __name__ == "__main__":
 
 
     imageList=list(wider.next())
-    print(imageList)
-    image = Image.open(imageList[0].image_name)
-    res_image, _ = yolo.detect_image(image)
-    res_image.show()
+    for i,item in enumerate(imageList[0:-1]):
+        image = Image.open(item.image_name)
+        res_image, _ = yolo.detect_image(image)
+        draw = ImageDraw.Draw(res_image)
+        for bbox in item.bboxes:
+            #print(bbox)
+            draw.rectangle([bbox[0], bbox[1], bbox[2],  bbox[3]],outline=(255, 0, 0))
+        del draw
+        #image.show()
+        #res_image, bbox = yolo.detect_image(image)
+        #res_image.show()
+        try:
+            res_image.save('./output/%d.jpg'%i, "JPEG")
+        except IOError:
+            print("cannot create thumbnail for")
     yolo.close_session()
