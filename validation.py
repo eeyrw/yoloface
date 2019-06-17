@@ -100,7 +100,7 @@ if __name__ == "__main__":
         res_image, _ = yolo.detect_image(image)
         draw = ImageDraw.Draw(res_image)
         for bbox in item.bboxes:
-            print(bbox)
+            #print(bbox)
             draw.rectangle([bbox[0], bbox[1], bbox[2],  bbox[3]],outline=(255, 0, 0))
         del draw
         #image.show()
