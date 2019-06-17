@@ -45,7 +45,7 @@ def get_args():
     parser.add_argument('--iou', type=float, default=0.45,
                         help='the iou threshold')
     parser.add_argument('--img-size', type=list, action='store',
-                        default=(416, 416), help='input image size')
+                        default=(768, 768), help='input image size')
     parser.add_argument('--output', type=str, default='outputs/',
                         help='image/video output path')
     args = parser.parse_args()
@@ -95,10 +95,9 @@ if __name__ == "__main__":
 
 
     imageList=list(wider.next())
-    for i,item in enumerate(imageList[700:-1]):
+    for i,item in enumerate(imageList):
         image = Image.open(item.image_name)
         res_image, _ = yolo.detect_image(image)
-        print(_)
         draw = ImageDraw.Draw(res_image)
         for bbox in item.bboxes:
             print(bbox)
@@ -110,5 +109,5 @@ if __name__ == "__main__":
         try:
             res_image.save('./output/%d.jpg'%i, "JPEG")
         except IOError:
-            print("cannot create thumbnail for")
+            print("cannot create pcture")
     yolo.close_session()

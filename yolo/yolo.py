@@ -135,7 +135,7 @@ class YOLO(object):
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
             right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
 
-            print(text, (left, top), (right, bottom))
+            #print(text, (left, top), (right, bottom))
 
             for thk in range(thickness):
                 draw.rectangle(
