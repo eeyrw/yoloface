@@ -93,7 +93,7 @@ if __name__ == "__main__":
     imageList=list(wider.next())
 
     result=[]
-    for i,item in tqdm(enumerate(imageList[0:1000])):
+    for i,item in tqdm(enumerate(imageList)):
         image = Image.open(item.image_name)
         res_image, predictBoxesAndScores ,timeConsumed= yolo.detect_image(image,isPrint=False)
         result.append({'imagePath':item.image_name,'groundTruthBoxes':item.bboxes,'scoresAndBoxes':predictBoxesAndScores,'timeConsumed':timeConsumed})
