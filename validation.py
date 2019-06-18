@@ -24,7 +24,7 @@ def get_args():
     parser.add_argument('--iou', type=float, default=0.45,
                         help='the iou threshold')
     parser.add_argument('--img-size', type=list, action='store',
-                        default=(416, 416), help='input image size')
+                        default=(1024, 1024), help='input image size')
     parser.add_argument('--output', type=str, default='outputs/',
                         help='image/video output path')
     args = parser.parse_args()
