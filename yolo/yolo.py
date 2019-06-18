@@ -94,7 +94,7 @@ class YOLO(object):
                                            max_boxes=200)
         return boxes, scores, classes
 
-    def detect_image(self, image):
+    def detect_image(self, image, isPrint=True):
         start_time = timer()
         if self.model_image_size != (None, None):
             assert self.model_image_size[
@@ -108,7 +108,7 @@ class YOLO(object):
                               image.height - (image.height % 32))
             boxed_image = letterbox_image(image, new_image_size)
         image_data = np.array(boxed_image, dtype='float32')
-        print(image_data.shape)
+        if isPrint:print(image_data.shape)
         image_data /= 255.
         # add batch dimension
         image_data = np.expand_dims(image_data, 0)
@@ -119,34 +119,37 @@ class YOLO(object):
                 self.input_image_shape: [image.size[1], image.size[0]],
                 K.learning_phase(): 0
             })
-        print('*** Found {} face(s) for this image'.format(len(out_boxes)))
+        if isPrint:print('*** Found {} face(s) for this image'.format(len(out_boxes)))
         thickness = (image.size[0] + image.size[1]) // 400
 
+        boxesAndScores=[]
         for i, c in reversed(list(enumerate(out_classes))):
             predicted_class = self.class_names[c]
             box = out_boxes[i]
             score = out_scores[i]
             text = '{} {:.2f}'.format(predicted_class, score)
-            draw = ImageDraw.Draw(image)
+            # draw = ImageDraw.Draw(image)
 
             top, left, bottom, right = box
             top = max(0, np.floor(top + 0.5).astype('int32'))
             left = max(0, np.floor(left + 0.5).astype('int32'))
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
             right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
+            if isPrint:print(text, (left, top), (right, bottom))
 
-            #print(text, (left, top), (right, bottom))
+            boxesAndScores.append((score,(left, top, right, bottom)))
 
-            for thk in range(thickness):
-                draw.rectangle(
-                    [left + thk, top + thk, right - thk, bottom - thk],
-                    outline=(51, 178, 255))
-            del draw
+            # for thk in range(thickness):
+            #     draw.rectangle(
+            #         [left + thk, top + thk, right - thk, bottom - thk],
+            #         outline=(51, 178, 255))
+            # del draw
 
         end_time = timer()
-        print('*** Processing time: {:.2f}ms'.format((end_time -
-                                                          start_time) * 1000))
-        return image, out_boxes
+        timeConsumed =(end_time -start_time)*1000
+        if isPrint:print('*** Processing time: {:.2f}ms'.format(timeConsumed))
+
+        return image, boxesAndScores, timeConsumed
 
     def close_session(self):
         self.sess.close()

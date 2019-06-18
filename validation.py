@@ -1,36 +1,15 @@
 from wider import WIDER
 import matplotlib.pyplot as plt
 import cv2
-
 import argparse
-
-
-# press ctrl-C to stop the process
-# for data in wider.next():
-
-#     im = cv2.imread(data.image_name)
-
-#     im = im[:, :, (2, 1, 0)]
-#     fig, ax = plt.subplots(figsize=(12, 12))
-#     ax.imshow(im, aspect='equal')
-
-#     for bbox in data.bboxes:
-
-#         ax.add_patch(
-#             plt.Rectangle((bbox[0], bbox[1]),
-#                           bbox[2] - bbox[0],
-#                           bbox[3] - bbox[1], fill=False,
-#                           edgecolor='red', linewidth=3.5)
-#             )
-
-#     plt.axis('off')
-#     plt.tight_layout()
-#     plt.draw()
-#     plt.show()
-#     break
-
 from yolo.yolo import YOLO
 from PIL import ImageDraw, Image
+from tqdm import tqdm
+import pickle
+import datetime
+import os
+import shutil
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -45,7 +24,7 @@ def get_args():
     parser.add_argument('--iou', type=float, default=0.45,
                         help='the iou threshold')
     parser.add_argument('--img-size', type=list, action='store',
-                        default=(768, 768), help='input image size')
+                        default=(416, 416), help='input image size')
     parser.add_argument('--output', type=str, default='outputs/',
                         help='image/video output path')
     args = parser.parse_args()
@@ -80,6 +59,23 @@ def compute_iou(rec1, rec2):
         intersect = (right_line - left_line) * (bottom_line - top_line)
         return intersect / (sum_area - intersect)
 
+def createDir(dirPath):
+	if not os.path.exists(dirPath):
+		os.makedirs(dirPath)
+
+
+def createDirOverwrite(dirPath):
+	if os.path.exists(dirPath):
+		shutil.rmtree(dirPath)
+	os.makedirs(dirPath)
+
+def saveExperimentResult(result, savePath):
+    try:
+        file = open(savePath, "wb")
+        pickle.dump(result, file)
+        file.close()
+    except IOError as e:
+        print(e)
 
 if __name__ == "__main__":
     # Get the arguments
@@ -95,19 +91,26 @@ if __name__ == "__main__":
 
 
     imageList=list(wider.next())
-    for i,item in enumerate(imageList):
+
+    result=[]
+    for i,item in tqdm(enumerate(imageList[0:1000])):
         image = Image.open(item.image_name)
-        res_image, _ = yolo.detect_image(image)
-        draw = ImageDraw.Draw(res_image)
-        for bbox in item.bboxes:
-            #print(bbox)
-            draw.rectangle([bbox[0], bbox[1], bbox[2],  bbox[3]],outline=(255, 0, 0))
-        del draw
-        #image.show()
-        #res_image, bbox = yolo.detect_image(image)
-        #res_image.show()
-        try:
-            res_image.save('./output/%d.jpg'%i, "JPEG")
-        except IOError:
-            print("cannot create pcture")
+        res_image, predictBoxesAndScores ,timeConsumed= yolo.detect_image(image,isPrint=False)
+        result.append({'imagePath':item.image_name,'groundTruthBoxes':item.bboxes,'scoresAndBoxes':predictBoxesAndScores,'timeConsumed':timeConsumed})
+        # draw = ImageDraw.Draw(res_image)
+        # for score,bbox in predictBoxesAndScores:
+        #     print('Score:%2f'%score)
+        #     print(bbox)
+        #     draw.rectangle([bbox[0], bbox[1], bbox[2],  bbox[3]],outline=(0, 255, 0))
+        # for bbox in item.bboxes:
+        #     print(bbox)
+        #     draw.rectangle([bbox[0], bbox[1], bbox[2],  bbox[3]],outline=(255, 0, 0))
+        # del draw
+
+        # try:
+        #     res_image.save('./output/%d.jpg'%i, "JPEG")
+        # except IOError:
+        #     print("cannot create pcture")
     yolo.close_session()
+    createDir('./result/')
+    saveExperimentResult(result,'./result/Result-%s.data'%datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
